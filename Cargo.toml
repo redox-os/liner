@@ -23,7 +23,7 @@ name = "liner"
 
 [dependencies]
 bytecount = "0.6.0"
-termion = "1.5.4"
+termion = "2.0.3"
 unicode-width = "0.1.6"
 itertools = "0.8.2"
 strip-ansi-escapes = "0.1.0"
