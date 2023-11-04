@@ -20,7 +20,7 @@ A Rust library offering readline-like functionality.
 In `Cargo.toml`:
 ```toml
 [dependencies]
-redox_liner = "0.5.1"
+redox_liner = "0.5.2"
 ...
 ```
 

@@ -1,6 +1,6 @@
 [package]
 name = "redox_liner"
-version = "0.5.1" # remember to update README
+version = "0.5.2" # remember to update README
 authors = [
     "MovingtoMars <definitelynotliam@gmail.com>",
     "Michael Aaron Murphy <mmstickman@gmail.com>",
