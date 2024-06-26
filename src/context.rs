@@ -128,7 +128,7 @@ impl Context {
     ) -> io::Result<String> {
         keymap.init(&mut ed);
         for c in stdin().keys() {
-            if keymap.handle_key(c.unwrap(), &mut ed, handler)? {
+            if keymap.handle_key(c?, &mut ed, handler)? {
                 break;
             }
         }
