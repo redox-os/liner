@@ -1171,7 +1171,7 @@ impl<'a, W: io::Write> Editor<'a, W> {
 
         {
             let out = &mut self.out;
-            out.write_all(self.context.buf.as_bytes());
+            out.write_all(self.context.buf.as_bytes())?;
             self.context.buf.clear();
             out.flush()
         }

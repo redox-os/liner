@@ -164,7 +164,7 @@ fn vi_move_word<W: Write>(
         Whitespace,
         Keyword,
         NonKeyword,
-    };
+    }
 
     let mut cursor = ed.cursor();
     'repeat: for _ in 0..count {
@@ -233,7 +233,7 @@ fn vi_move_word_end<W: Write>(
         EndOnWord,
         EndOnOther,
         EndOnWhitespace,
-    };
+    }
 
     let mut cursor = ed.cursor();
     'repeat: for _ in 0..count {
@@ -507,7 +507,7 @@ impl Vi {
         }
 
         // restore the last command
-        mem::replace(&mut self.last_command, keys);
+        self.last_command = keys;
 
         Ok(())
     }
@@ -1067,7 +1067,7 @@ impl KeyMap for Vi {
     fn init<'a, W: Write>(&mut self, mut ed: &mut Editor<'a, W>) {
         // since we start in insert mode, we need to start an undo group
         ed.current_buffer_mut().start_undo_group();
-        self.set_editor_mode(&mut ed);
+        let _ = self.set_editor_mode(&mut ed);
     }
 
     fn handle_key_core<'a, W: Write>(
