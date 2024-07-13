@@ -414,8 +414,8 @@ impl Vi {
             }
         };
 
-        ed.no_eol = self.mode() == Mode::Normal;
-        self.movement_reset = self.mode() != Mode::Insert;
+        ed.no_eol = self.mode() == Normal;
+        self.movement_reset = self.mode() != Insert;
 
         if let Delete(start_pos) = last_mode {
             // perform the delete operation
@@ -2515,7 +2515,7 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -2534,9 +2534,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2555,9 +2555,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2578,7 +2578,7 @@ mod tests {
         ed.move_cursor_to(start_pos).unwrap();
         assert_eq!(ed.cursor(), 8);
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), 17);
     }
 
@@ -2597,9 +2597,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2616,7 +2616,7 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -2635,9 +2635,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2653,7 +2653,7 @@ mod tests {
         let end_pos = ed.cursor();
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -2670,7 +2670,7 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -2689,9 +2689,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2708,15 +2708,15 @@ mod tests {
         ed.insert_str_after_cursor("some words").unwrap();
         ed.move_cursor_to_start_of_line().unwrap();
 
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
     }
 
@@ -2732,15 +2732,15 @@ mod tests {
         let pos2 = ed.cursor();
         ed.move_cursor_to_start_of_line().unwrap();
 
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
     }
 
@@ -2756,13 +2756,13 @@ mod tests {
         let pos2 = ed.cursor();
         ed.move_cursor_to_start_of_line().unwrap();
 
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
     }
 
@@ -2780,15 +2780,15 @@ mod tests {
         let pos3 = ed.cursor();
         ed.move_cursor_to_start_of_line().unwrap();
 
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos3);
     }
 
@@ -2812,45 +2812,45 @@ mod tests {
         // make sure move_word() and move_word_back() are reflections of eachother
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos3);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos4);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos5);
 
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos4);
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos3);
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), 0);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos4);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos5);
 
-        super::move_word_ws_back(&mut ed, 1).unwrap();
+        move_word_ws_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos4);
-        super::move_word_ws_back(&mut ed, 1).unwrap();
+        move_word_ws_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word_ws_back(&mut ed, 1).unwrap();
+        move_word_ws_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws_back(&mut ed, 1).unwrap();
+        move_word_ws_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), 0);
     }
 
@@ -2871,25 +2871,25 @@ mod tests {
 
         // make sure move_word() and move_word_back() are reflections of eachother
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word(&mut ed, 3).unwrap();
+        move_word(&mut ed, 3).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word(&mut ed, 2).unwrap();
+        move_word(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos3);
 
-        super::move_word_back(&mut ed, 2).unwrap();
+        move_word_back(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word_back(&mut ed, 3).unwrap();
+        move_word_back(&mut ed, 3).unwrap();
         assert_eq!(ed.cursor(), 0);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 2).unwrap();
+        move_word_ws(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 2).unwrap();
+        move_word_ws(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos3);
 
-        super::move_word_ws_back(&mut ed, 2).unwrap();
+        move_word_ws_back(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws_back(&mut ed, 2).unwrap();
+        move_word_ws_back(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), 0);
     }
 
@@ -2907,7 +2907,7 @@ mod tests {
         ed.insert_str_after_cursor("s and some").unwrap();
 
         ed.move_cursor_to(start_pos).unwrap();
-        super::move_to_end_of_word_ws(&mut ed, 2).unwrap();
+        move_to_end_of_word_ws(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -3592,7 +3592,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcdefg").unwrap();
-        assert_eq!(super::find_char(ed.current_buffer(), 0, 'd', 1), Some(3));
+        assert_eq!(find_char(ed.current_buffer(), 0, 'd', 1), Some(3));
     }
 
     #[test]
@@ -3602,7 +3602,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcabc").unwrap();
-        assert_eq!(super::find_char(ed.current_buffer(), 1, 'a', 1), Some(3));
+        assert_eq!(find_char(ed.current_buffer(), 1, 'a', 1), Some(3));
     }
 
     #[test]
@@ -3612,7 +3612,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcabc").unwrap();
-        assert_eq!(super::find_char(ed.current_buffer(), 0, 'a', 2), Some(3));
+        assert_eq!(find_char(ed.current_buffer(), 0, 'a', 2), Some(3));
     }
 
     #[test]
@@ -3622,7 +3622,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcdefg").unwrap();
-        assert_eq!(super::find_char(ed.current_buffer(), 0, 'z', 1), None);
+        assert_eq!(find_char(ed.current_buffer(), 0, 'z', 1), None);
     }
 
     #[test]
@@ -3632,10 +3632,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcdefg").unwrap();
-        assert_eq!(
-            super::find_char_rev(ed.current_buffer(), 6, 'd', 1),
-            Some(3)
-        );
+        assert_eq!(find_char_rev(ed.current_buffer(), 6, 'd', 1), Some(3));
     }
 
     #[test]
@@ -3645,10 +3642,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcabc").unwrap();
-        assert_eq!(
-            super::find_char_rev(ed.current_buffer(), 5, 'c', 1),
-            Some(2)
-        );
+        assert_eq!(find_char_rev(ed.current_buffer(), 5, 'c', 1), Some(2));
     }
 
     #[test]
@@ -3658,10 +3652,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcabc").unwrap();
-        assert_eq!(
-            super::find_char_rev(ed.current_buffer(), 6, 'c', 2),
-            Some(2)
-        );
+        assert_eq!(find_char_rev(ed.current_buffer(), 6, 'c', 2), Some(2));
     }
 
     #[test]
@@ -3671,7 +3662,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcdefg").unwrap();
-        assert_eq!(super::find_char_rev(ed.current_buffer(), 6, 'z', 1), None);
+        assert_eq!(find_char_rev(ed.current_buffer(), 6, 'z', 1), None);
     }
 
     #[test]
