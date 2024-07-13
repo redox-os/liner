@@ -75,9 +75,8 @@ impl History {
         if let Some(path) = self.file_name.clone() {
             let file_size = self.file_size;
             self.load_history_file_test(&path, file_size, append)
-                .map(|l| {
+                .inspect(|&l| {
                     self.file_size = l;
-                    l
                 })
         } else {
             Err(io::Error::new(
@@ -188,10 +187,10 @@ impl History {
 
         if org_length != buf.len() {
             // Overwrite the history file with the deduplicated version if it changed.
-            let mut file = BufWriter::new(File::create(&path)?);
+            let mut file = BufWriter::new(File::create(path)?);
             // Write the commands to the history file.
             for command in buf.into_iter() {
-                let _ = file.write_all(&command.as_bytes());
+                let _ = file.write_all(command.as_bytes());
                 let _ = file.write_all(b"\n");
             }
         }
@@ -204,9 +203,8 @@ impl History {
         self.file_name = path.to_str().map(|s| s.to_owned());
         self.file_size = 0;
         if path.exists() {
-            self.load_history_file(path, false).map(|l| {
+            self.load_history_file(path, false).inspect(|&l| {
                 self.file_size = l;
-                l
             })
         } else {
             File::create(path)?;
@@ -289,7 +287,7 @@ impl History {
                 if self.compaction_writes > 0 {
                     // If 0 we "compacted" and nothing to write.
                     let mut file = BufWriter::new(inner_file);
-                    let _ = file.write_all(&item_str.as_bytes());
+                    let _ = file.write_all(item_str.as_bytes());
                     let _ = file.write_all(b"\n");
                     // Save the filesize after each append so we do not reload when we do not need to.
                     self.file_size += item_str.len() as u64 + 1;
@@ -323,7 +321,7 @@ impl History {
         curr_position: Option<usize>,
         new_buff: &Buffer,
     ) -> Option<usize> {
-        let pos = curr_position.unwrap_or_else(|| self.buffers.len());
+        let pos = curr_position.unwrap_or(self.buffers.len());
         if pos > 0 {
             self.get_match((0..pos).rev(), new_buff)
         } else {
@@ -362,7 +360,7 @@ impl History {
     /// Get the history file name.
     #[inline(always)]
     pub fn file_name(&self) -> Option<&str> {
-        self.file_name.as_ref().map(|s| s.as_str())
+        self.file_name.as_deref()
     }
 
     fn truncate(&mut self) {
@@ -382,7 +380,7 @@ impl History {
 
         // Write the commands to the history file.
         for command in self.buffers.iter().cloned() {
-            let _ = file.write_all(&String::from(command).as_bytes());
+            let _ = file.write_all(String::from(command).as_bytes());
             let _ = file.write_all(b"\n");
         }
         Ok("Wrote history to file.".to_string())

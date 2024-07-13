@@ -64,32 +64,32 @@ impl ModeStack {
 }
 
 fn is_movement_key(key: Key) -> bool {
-    match key {
+    matches!(
+        key,
         Key::Char('h')
-        | Key::Char('l')
-        | Key::Left
-        | Key::Right
-        | Key::Char('w')
-        | Key::Char('W')
-        | Key::Char('b')
-        | Key::Char('B')
-        | Key::Char('e')
-        | Key::Char('E')
-        | Key::Char('g')
-        | Key::Backspace
-        | Key::Char(' ')
-        | Key::Home
-        | Key::End
-        | Key::Char('^')
-        | Key::Char('$')
-        | Key::Char('t')
-        | Key::Char('f')
-        | Key::Char('T')
-        | Key::Char('F')
-        | Key::Char(';')
-        | Key::Char(',') => true,
-        _ => false,
-    }
+            | Key::Char('l')
+            | Key::Left
+            | Key::Right
+            | Key::Char('w')
+            | Key::Char('W')
+            | Key::Char('b')
+            | Key::Char('B')
+            | Key::Char('e')
+            | Key::Char('E')
+            | Key::Char('g')
+            | Key::Backspace
+            | Key::Char(' ')
+            | Key::Home
+            | Key::End
+            | Key::Char('^')
+            | Key::Char('$')
+            | Key::Char('t')
+            | Key::Char('f')
+            | Key::Char('T')
+            | Key::Char('F')
+            | Key::Char(';')
+            | Key::Char(',')
+    )
 }
 
 #[derive(PartialEq)]
@@ -353,7 +353,7 @@ impl Vi {
         self.mode_stack.mode()
     }
 
-    fn set_mode<'a, W: Write>(&mut self, mode: Mode, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn set_mode<W: Write>(&mut self, mode: Mode, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use self::Mode::*;
         self.set_mode_preserve_last(mode, ed)?;
         if mode == Insert {
@@ -363,7 +363,7 @@ impl Vi {
         Ok(())
     }
 
-    fn set_editor_mode<'a, W: Write>(&self, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn set_editor_mode<W: Write>(&self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use crate::editor::ViPromptMode;
         use Mode::*;
         if let Some(mode) = match self.mode() {
@@ -378,17 +378,17 @@ impl Vi {
         }
     }
 
-    fn set_mode_preserve_last<'a, W: Write>(
+    fn set_mode_preserve_last<W: Write>(
         &mut self,
         mode: Mode,
-        mut ed: &mut Editor<'a, W>,
+        ed: &mut Editor<'_, W>,
     ) -> io::Result<()> {
         use self::Mode::*;
 
         ed.no_eol = mode == Normal;
         self.movement_reset = mode != Insert;
         self.mode_stack.push(mode);
-        self.set_editor_mode(&mut ed)?;
+        self.set_editor_mode(ed)?;
 
         if mode == Insert || mode == Tilde {
             ed.current_buffer_mut().start_undo_group();
@@ -396,10 +396,10 @@ impl Vi {
         Ok(())
     }
 
-    fn pop_mode_after_movement<'a, W: Write>(
+    fn pop_mode_after_movement<W: Write>(
         &mut self,
         move_type: MoveType,
-        mut ed: &mut Editor<'a, W>,
+        ed: &mut Editor<'_, W>,
     ) -> io::Result<()> {
         use self::Mode::*;
         use self::MoveType::*;
@@ -439,10 +439,10 @@ impl Vi {
             self.count = 0;
         }
 
-        self.set_editor_mode(&mut ed)
+        self.set_editor_mode(ed)
     }
 
-    fn pop_mode<'a, W: Write>(&mut self, mut ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn pop_mode<W: Write>(&mut self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use self::Mode::*;
 
         let last_mode = self.mode_stack.pop();
@@ -456,15 +456,15 @@ impl Vi {
         if last_mode == Tilde {
             ed.display().unwrap();
         }
-        self.set_editor_mode(&mut ed)
+        self.set_editor_mode(ed)
     }
 
     /// Return to normal mode.
-    fn normal_mode_abort<'a, W: Write>(&mut self, mut ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn normal_mode_abort<W: Write>(&mut self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         self.mode_stack.clear();
         ed.no_eol = true;
         self.count = 0;
-        self.set_editor_mode(&mut ed)
+        self.set_editor_mode(ed)
     }
 
     /// When doing a move, 0 should behave the same as 1 as far as the count goes.
@@ -476,21 +476,21 @@ impl Vi {
     }
 
     /// Get the current count or the number of remaining chars in the buffer.
-    fn move_count_left<'a, W: Write>(&self, ed: &Editor<'a, W>) -> usize {
+    fn move_count_left<W: Write>(&self, ed: &Editor<'_, W>) -> usize {
         cmp::min(ed.cursor(), self.move_count())
     }
 
     /// Get the current count or the number of remaining chars in the buffer.
-    fn move_count_right<'a, W: Write>(&self, ed: &Editor<'a, W>) -> usize {
+    fn move_count_right<W: Write>(&self, ed: &Editor<'_, W>) -> usize {
         cmp::min(
             ed.current_buffer().num_chars() - ed.cursor(),
             self.move_count(),
         )
     }
 
-    fn repeat<'a, W: Write>(&mut self, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn repeat<W: Write>(&mut self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         self.last_count = self.count;
-        let keys = mem::replace(&mut self.last_command, Vec::new());
+        let keys = mem::take(&mut self.last_command);
 
         if let Some(insert_key) = self.last_insert {
             // enter insert mode if necessary
@@ -512,11 +512,7 @@ impl Vi {
         Ok(())
     }
 
-    fn handle_key_common<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_common<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match key {
             Key::Ctrl('l') => ed.clear(),
             Key::Left => ed.move_cursor_left(1),
@@ -532,18 +528,14 @@ impl Vi {
         }
     }
 
-    fn handle_key_insert<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_insert<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match key {
             Key::Esc | Key::Ctrl('[') => {
                 // perform any repeats
                 if self.count > 0 {
                     self.last_count = self.count;
                     for _ in 1..self.count {
-                        let keys = mem::replace(&mut self.last_command, Vec::new());
+                        let keys = mem::take(&mut self.last_command);
                         for k in keys {
                             self.handle_key_core(k, ed)?;
                         }
@@ -606,11 +598,7 @@ impl Vi {
         }
     }
 
-    fn handle_key_normal<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_normal<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use self::CharMovement::*;
         use self::Mode::*;
         use self::MoveType::*;
@@ -839,11 +827,7 @@ impl Vi {
         }
     }
 
-    fn handle_key_replace<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_replace<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match key {
             Key::Char(c) => {
                 // make sure there are enough chars to replace
@@ -878,10 +862,10 @@ impl Vi {
         Ok(())
     }
 
-    fn handle_key_delete_or_change<'a, W: Write>(
+    fn handle_key_delete_or_change<W: Write>(
         &mut self,
         key: Key,
-        ed: &mut Editor<'a, W>,
+        ed: &mut Editor<'_, W>,
     ) -> io::Result<()> {
         match (key, self.current_insert) {
             // check if this is a movement key
@@ -927,11 +911,11 @@ impl Vi {
         }
     }
 
-    fn handle_key_move_to_char<'a, W: Write>(
+    fn handle_key_move_to_char<W: Write>(
         &mut self,
         key: Key,
         movement: CharMovement,
-        ed: &mut Editor<'a, W>,
+        ed: &mut Editor<'_, W>,
     ) -> io::Result<()> {
         use self::CharMovement::*;
         use self::MoveType::*;
@@ -1008,7 +992,7 @@ impl Vi {
         }
     }
 
-    fn handle_key_g<'a, W: Write>(&mut self, key: Key, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn handle_key_g<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use self::MoveType::*;
 
         let count = self.move_count();
@@ -1034,17 +1018,13 @@ impl Vi {
 }
 
 impl KeyMap for Vi {
-    fn init<'a, W: Write>(&mut self, mut ed: &mut Editor<'a, W>) {
+    fn init<W: Write>(&mut self, ed: &mut Editor<'_, W>) {
         // since we start in insert mode, we need to start an undo group
         ed.current_buffer_mut().start_undo_group();
-        let _ = self.set_editor_mode(&mut ed);
+        let _ = self.set_editor_mode(ed);
     }
 
-    fn handle_key_core<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_core<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match self.mode() {
             Mode::Normal => self.handle_key_normal(key, ed),
             Mode::Insert => self.handle_key_insert(key, ed),

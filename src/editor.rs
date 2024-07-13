@@ -985,7 +985,7 @@ impl<'a, W: io::Write> Editor<'a, W> {
                     hplace,
                     self.history_subset_index.len()
                 ),
-                strip(&prefix).len() + 9,
+                strip(prefix).len() + 9,
             )
         } else {
             (self.prompt.to_string(), 0)

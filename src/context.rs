@@ -4,7 +4,6 @@ use termion::raw::IntoRawMode;
 
 use super::*;
 use crate::editor::Prompt;
-use keymap;
 
 pub type ColorClosure = Box<dyn Fn(&str) -> String>;
 
@@ -121,9 +120,9 @@ impl Context {
         //self.revert_all_history();
     }
 
-    fn handle_keys<'a, W: Write, M: KeyMap, C: Completer>(
+    fn handle_keys<W: Write, M: KeyMap, C: Completer>(
         mut keymap: M,
-        mut ed: Editor<'a, W>,
+        mut ed: Editor<'_, W>,
         handler: &mut C,
     ) -> io::Result<String> {
         keymap.init(&mut ed);
