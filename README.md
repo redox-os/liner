@@ -1,4 +1,5 @@
 # liner
+
 A Rust library offering readline-like functionality.
 
 [CONTRIBUTING.md](/CONTRIBUTING.md)
@@ -7,7 +8,8 @@ A Rust library offering readline-like functionality.
 [![Build Status](https://travis-ci.org/MovingtoMars/liner.svg)](https://travis-ci.org/MovingtoMars/liner)
 [![Docs](https://docs.rs/liner/badge.svg)](https://docs.rs/liner/)
 
-## Featues
+## Features
+
 - [x] Autosuggestions
 - [x] Emacs and Vi keybindings
 - [x] Multi-line editing
@@ -17,7 +19,9 @@ A Rust library offering readline-like functionality.
 - [ ] Remappable keybindings
 
 ## Basic Usage
+
 In `Cargo.toml`:
+
 ```toml
 [dependencies]
 redox_liner = "0.5.2"
@@ -57,4 +61,5 @@ fn main() {
 **See src/main.rs for a more sophisticated example.**
 
 ## License
+
 MIT licensed. See the `LICENSE` file.
