@@ -93,8 +93,7 @@ impl Completer for FilenameCompleter {
                     full_path.file_name().unwrap().to_string_lossy()
                 } else {
                     let sn = full_path.file_name().unwrap().to_string_lossy();
-                    sn.to_lowercase();
-                    sn
+                    sn.to_lowercase().into()
                 };
                 completing_dir = false;
             }
@@ -136,7 +135,7 @@ impl Completer for FilenameCompleter {
                 let mut s = a.to_string_lossy();
                 if dir.path().is_dir() {
                     let mut string = s.into_owned();
-                    string.push_str("/");
+                    string.push('/');
                     s = string.into();
                 }
 

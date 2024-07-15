@@ -5,18 +5,15 @@ use std::io::{self, ErrorKind, Write};
 use termion::event::Key;
 
 pub trait KeyMap: Default {
-    fn handle_key_core<'a, W: Write>(
-        &mut self,
-        key: Key,
-        editor: &mut Editor<'a, W>,
-    ) -> io::Result<()>;
+    fn handle_key_core<W: Write>(&mut self, key: Key, editor: &mut Editor<'_, W>)
+        -> io::Result<()>;
 
-    fn init<'a, W: Write>(&mut self, _editor: &mut Editor<'a, W>) {}
+    fn init<W: Write>(&mut self, _editor: &mut Editor<'_, W>) {}
 
-    fn handle_key<'a, W: Write, C: Completer>(
+    fn handle_key<W: Write, C: Completer>(
         &mut self,
         mut key: Key,
-        editor: &mut Editor<'a, W>,
+        editor: &mut Editor<'_, W>,
         handler: &mut C,
     ) -> io::Result<bool> {
         let mut done = false;
@@ -91,11 +88,7 @@ mod tests {
     struct TestKeyMap;
 
     impl KeyMap for TestKeyMap {
-        fn handle_key_core<'a, W: Write>(
-            &mut self,
-            _: Key,
-            _: &mut Editor<'a, W>,
-        ) -> io::Result<()> {
+        fn handle_key_core<W: Write>(&mut self, _: Key, _: &mut Editor<'_, W>) -> io::Result<()> {
             Ok(())
         }
     }

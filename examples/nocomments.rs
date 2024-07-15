@@ -4,7 +4,6 @@ extern crate termion;
 
 use std::env::{args, current_dir};
 use std::io;
-use std::mem::replace;
 
 use liner::{Completer, Context, CursorPosition, Event, EventKind, FilenameCompleter, Prompt};
 use regex::Regex;
@@ -29,7 +28,7 @@ impl Completer for NoCommentCompleter {
         }
     }
 
-    fn on_event<W: std::io::Write>(&mut self, event: Event<W>) {
+    fn on_event<W: io::Write>(&mut self, event: Event<W>) {
         if let EventKind::BeforeComplete = event.kind {
             let (_, pos) = event.editor.get_words_and_cursor_position();
 
@@ -42,11 +41,11 @@ impl Completer for NoCommentCompleter {
                 CursorPosition::OnWordRightEdge(i) => i >= 1,
             };
 
-            if filename {
+            self.inner = if filename {
                 let completer = FilenameCompleter::new(Some(current_dir().unwrap()));
-                replace(&mut self.inner, Some(completer));
+                Some(completer)
             } else {
-                replace(&mut self.inner, None);
+                None
             }
         }
     }

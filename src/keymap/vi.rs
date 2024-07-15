@@ -64,32 +64,32 @@ impl ModeStack {
 }
 
 fn is_movement_key(key: Key) -> bool {
-    match key {
+    matches!(
+        key,
         Key::Char('h')
-        | Key::Char('l')
-        | Key::Left
-        | Key::Right
-        | Key::Char('w')
-        | Key::Char('W')
-        | Key::Char('b')
-        | Key::Char('B')
-        | Key::Char('e')
-        | Key::Char('E')
-        | Key::Char('g')
-        | Key::Backspace
-        | Key::Char(' ')
-        | Key::Home
-        | Key::End
-        | Key::Char('^')
-        | Key::Char('$')
-        | Key::Char('t')
-        | Key::Char('f')
-        | Key::Char('T')
-        | Key::Char('F')
-        | Key::Char(';')
-        | Key::Char(',') => true,
-        _ => false,
-    }
+            | Key::Char('l')
+            | Key::Left
+            | Key::Right
+            | Key::Char('w')
+            | Key::Char('W')
+            | Key::Char('b')
+            | Key::Char('B')
+            | Key::Char('e')
+            | Key::Char('E')
+            | Key::Char('g')
+            | Key::Backspace
+            | Key::Char(' ')
+            | Key::Home
+            | Key::End
+            | Key::Char('^')
+            | Key::Char('$')
+            | Key::Char('t')
+            | Key::Char('f')
+            | Key::Char('T')
+            | Key::Char('F')
+            | Key::Char(';')
+            | Key::Char(',')
+    )
 }
 
 #[derive(PartialEq)]
@@ -164,7 +164,7 @@ fn vi_move_word<W: Write>(
         Whitespace,
         Keyword,
         NonKeyword,
-    };
+    }
 
     let mut cursor = ed.cursor();
     'repeat: for _ in 0..count {
@@ -233,7 +233,7 @@ fn vi_move_word_end<W: Write>(
         EndOnWord,
         EndOnOther,
         EndOnWhitespace,
-    };
+    }
 
     let mut cursor = ed.cursor();
     'repeat: for _ in 0..count {
@@ -353,7 +353,7 @@ impl Vi {
         self.mode_stack.mode()
     }
 
-    fn set_mode<'a, W: Write>(&mut self, mode: Mode, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn set_mode<W: Write>(&mut self, mode: Mode, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use self::Mode::*;
         self.set_mode_preserve_last(mode, ed)?;
         if mode == Insert {
@@ -363,7 +363,7 @@ impl Vi {
         Ok(())
     }
 
-    fn set_editor_mode<'a, W: Write>(&self, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn set_editor_mode<W: Write>(&self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use crate::editor::ViPromptMode;
         use Mode::*;
         if let Some(mode) = match self.mode() {
@@ -378,17 +378,17 @@ impl Vi {
         }
     }
 
-    fn set_mode_preserve_last<'a, W: Write>(
+    fn set_mode_preserve_last<W: Write>(
         &mut self,
         mode: Mode,
-        mut ed: &mut Editor<'a, W>,
+        ed: &mut Editor<'_, W>,
     ) -> io::Result<()> {
         use self::Mode::*;
 
         ed.no_eol = mode == Normal;
         self.movement_reset = mode != Insert;
         self.mode_stack.push(mode);
-        self.set_editor_mode(&mut ed)?;
+        self.set_editor_mode(ed)?;
 
         if mode == Insert || mode == Tilde {
             ed.current_buffer_mut().start_undo_group();
@@ -396,10 +396,10 @@ impl Vi {
         Ok(())
     }
 
-    fn pop_mode_after_movement<'a, W: Write>(
+    fn pop_mode_after_movement<W: Write>(
         &mut self,
         move_type: MoveType,
-        mut ed: &mut Editor<'a, W>,
+        ed: &mut Editor<'_, W>,
     ) -> io::Result<()> {
         use self::Mode::*;
         use self::MoveType::*;
@@ -414,8 +414,8 @@ impl Vi {
             }
         };
 
-        ed.no_eol = self.mode() == Mode::Normal;
-        self.movement_reset = self.mode() != Mode::Insert;
+        ed.no_eol = self.mode() == Normal;
+        self.movement_reset = self.mode() != Insert;
 
         if let Delete(start_pos) = last_mode {
             // perform the delete operation
@@ -439,10 +439,10 @@ impl Vi {
             self.count = 0;
         }
 
-        self.set_editor_mode(&mut ed)
+        self.set_editor_mode(ed)
     }
 
-    fn pop_mode<'a, W: Write>(&mut self, mut ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn pop_mode<W: Write>(&mut self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use self::Mode::*;
 
         let last_mode = self.mode_stack.pop();
@@ -456,15 +456,15 @@ impl Vi {
         if last_mode == Tilde {
             ed.display().unwrap();
         }
-        self.set_editor_mode(&mut ed)
+        self.set_editor_mode(ed)
     }
 
     /// Return to normal mode.
-    fn normal_mode_abort<'a, W: Write>(&mut self, mut ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn normal_mode_abort<W: Write>(&mut self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         self.mode_stack.clear();
         ed.no_eol = true;
         self.count = 0;
-        self.set_editor_mode(&mut ed)
+        self.set_editor_mode(ed)
     }
 
     /// When doing a move, 0 should behave the same as 1 as far as the count goes.
@@ -476,21 +476,21 @@ impl Vi {
     }
 
     /// Get the current count or the number of remaining chars in the buffer.
-    fn move_count_left<'a, W: Write>(&self, ed: &Editor<'a, W>) -> usize {
+    fn move_count_left<W: Write>(&self, ed: &Editor<'_, W>) -> usize {
         cmp::min(ed.cursor(), self.move_count())
     }
 
     /// Get the current count or the number of remaining chars in the buffer.
-    fn move_count_right<'a, W: Write>(&self, ed: &Editor<'a, W>) -> usize {
+    fn move_count_right<W: Write>(&self, ed: &Editor<'_, W>) -> usize {
         cmp::min(
             ed.current_buffer().num_chars() - ed.cursor(),
             self.move_count(),
         )
     }
 
-    fn repeat<'a, W: Write>(&mut self, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn repeat<W: Write>(&mut self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         self.last_count = self.count;
-        let keys = mem::replace(&mut self.last_command, Vec::new());
+        let keys = mem::take(&mut self.last_command);
 
         if let Some(insert_key) = self.last_insert {
             // enter insert mode if necessary
@@ -507,16 +507,12 @@ impl Vi {
         }
 
         // restore the last command
-        mem::replace(&mut self.last_command, keys);
+        self.last_command = keys;
 
         Ok(())
     }
 
-    fn handle_key_common<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_common<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match key {
             Key::Ctrl('l') => ed.clear(),
             Key::Left => ed.move_cursor_left(1),
@@ -532,18 +528,14 @@ impl Vi {
         }
     }
 
-    fn handle_key_insert<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_insert<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match key {
             Key::Esc | Key::Ctrl('[') => {
                 // perform any repeats
                 if self.count > 0 {
                     self.last_count = self.count;
                     for _ in 1..self.count {
-                        let keys = mem::replace(&mut self.last_command, Vec::new());
+                        let keys = mem::take(&mut self.last_command);
                         for k in keys {
                             self.handle_key_core(k, ed)?;
                         }
@@ -552,8 +544,7 @@ impl Vi {
                 }
                 // cursor moves to the left when switching from insert to normal mode
                 ed.move_cursor_left(1)?;
-                self.pop_mode(ed);
-                Ok(())
+                self.pop_mode(ed)
             }
             Key::Char(c) => {
                 if self.movement_reset {
@@ -607,11 +598,7 @@ impl Vi {
         }
     }
 
-    fn handle_key_normal<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_normal<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use self::CharMovement::*;
         use self::Mode::*;
         use self::MoveType::*;
@@ -623,37 +610,33 @@ impl Vi {
             }
             Key::Char('i') => {
                 self.last_insert = Some(key);
-                self.set_mode(Insert, ed);
-                Ok(())
+                self.set_mode(Insert, ed)
             }
             Key::Char('a') => {
                 self.last_insert = Some(key);
-                self.set_mode(Insert, ed);
+                self.set_mode(Insert, ed)?;
                 ed.move_cursor_right(1)
             }
             Key::Char('A') => {
                 self.last_insert = Some(key);
-                self.set_mode(Insert, ed);
+                self.set_mode(Insert, ed)?;
                 ed.move_cursor_to_end_of_line()
             }
             Key::Char('I') => {
                 self.last_insert = Some(key);
-                self.set_mode(Insert, ed);
+                self.set_mode(Insert, ed)?;
                 ed.move_cursor_to_start_of_line()
             }
             Key::Char('s') => {
                 self.last_insert = Some(key);
-                self.set_mode(Insert, ed);
+                self.set_mode(Insert, ed)?;
                 let pos = ed.cursor() + self.move_count_right(ed);
                 ed.delete_until(pos)?;
                 self.last_count = self.count;
                 self.count = 0;
                 Ok(())
             }
-            Key::Char('r') => {
-                self.set_mode(Mode::Replace, ed);
-                Ok(())
-            }
+            Key::Char('r') => self.set_mode(Replace, ed),
             Key::Char('d') | Key::Char('c') => {
                 self.current_command.clear();
 
@@ -665,11 +648,11 @@ impl Vi {
                     // handle special 'c' key stuff
                     self.current_insert = Some(key);
                     self.current_command.clear();
-                    self.set_mode(Insert, ed);
+                    self.set_mode(Insert, ed)?;
                 }
 
                 let start_pos = ed.cursor();
-                self.set_mode(Mode::Delete(start_pos), ed);
+                self.set_mode(Delete(start_pos), ed)?;
                 self.secondary_count = self.count;
                 self.count = 0;
                 Ok(())
@@ -692,7 +675,7 @@ impl Vi {
                 self.count = 0;
                 self.last_count = 0;
 
-                self.set_mode_preserve_last(Insert, ed);
+                self.set_mode_preserve_last(Insert, ed)?;
                 ed.delete_all_after_cursor()
             }
             Key::Char('.') => {
@@ -725,22 +708,10 @@ impl Vi {
                 ed.move_down()?;
                 self.pop_mode_after_movement(Exclusive, ed)
             }
-            Key::Char('t') => {
-                self.set_mode(Mode::MoveToChar(RightUntil), ed);
-                Ok(())
-            }
-            Key::Char('T') => {
-                self.set_mode(Mode::MoveToChar(LeftUntil), ed);
-                Ok(())
-            }
-            Key::Char('f') => {
-                self.set_mode(Mode::MoveToChar(RightAt), ed);
-                Ok(())
-            }
-            Key::Char('F') => {
-                self.set_mode(Mode::MoveToChar(LeftAt), ed);
-                Ok(())
-            }
+            Key::Char('t') => self.set_mode(MoveToChar(RightUntil), ed),
+            Key::Char('T') => self.set_mode(MoveToChar(LeftUntil), ed),
+            Key::Char('f') => self.set_mode(MoveToChar(RightAt), ed),
+            Key::Char('F') => self.set_mode(MoveToChar(LeftAt), ed),
             Key::Char(';') => self.handle_key_move_to_char(key, Repeat, ed),
             Key::Char(',') => self.handle_key_move_to_char(key, ReverseRepeat, ed),
             Key::Char('w') => {
@@ -773,10 +744,7 @@ impl Vi {
                 move_word_ws_back(ed, count)?;
                 self.pop_mode_after_movement(Exclusive, ed)
             }
-            Key::Char('g') => {
-                self.set_mode(Mode::G, ed);
-                Ok(())
-            }
+            Key::Char('g') => self.set_mode(G, ed),
             // if count is 0, 0 should move to start of line
             Key::Char('0') if self.count == 0 => {
                 ed.move_cursor_to_start_of_line()?;
@@ -815,7 +783,7 @@ impl Vi {
                 self.last_command.push(key);
                 self.last_count = self.count;
 
-                self.set_mode(Tilde, ed);
+                self.set_mode(Tilde, ed)?;
                 for _ in 0..self.move_count_right(ed) {
                     let c = ed.current_buffer().char_after(ed.cursor()).unwrap();
                     if c.is_lowercase() {
@@ -832,8 +800,7 @@ impl Vi {
                         ed.move_cursor_right(1)?;
                     }
                 }
-                self.pop_mode(ed);
-                Ok(())
+                self.pop_mode(ed)
             }
             Key::Char('u') => {
                 let count = self.move_count();
@@ -860,11 +827,7 @@ impl Vi {
         }
     }
 
-    fn handle_key_replace<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_replace<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match key {
             Key::Char(c) => {
                 // make sure there are enough chars to replace
@@ -886,11 +849,11 @@ impl Vi {
 
                     ed.move_cursor_left(1)?;
                 }
-                self.pop_mode(ed);
+                self.pop_mode(ed)?;
             }
             // not a char
             _ => {
-                self.normal_mode_abort(ed);
+                self.normal_mode_abort(ed)?;
             }
         };
 
@@ -899,10 +862,10 @@ impl Vi {
         Ok(())
     }
 
-    fn handle_key_delete_or_change<'a, W: Write>(
+    fn handle_key_delete_or_change<W: Write>(
         &mut self,
         key: Key,
-        ed: &mut Editor<'a, W>,
+        ed: &mut Editor<'_, W>,
     ) -> io::Result<()> {
         match (key, self.current_insert) {
             // check if this is a movement key
@@ -941,22 +904,18 @@ impl Vi {
                 ed.delete_all_after_cursor()?;
 
                 // return to the previous mode
-                self.pop_mode(ed);
-                Ok(())
+                self.pop_mode(ed)
             }
             // not a delete or change command, back to normal mode
-            _ => {
-                self.normal_mode_abort(ed);
-                Ok(())
-            }
+            _ => self.normal_mode_abort(ed),
         }
     }
 
-    fn handle_key_move_to_char<'a, W: Write>(
+    fn handle_key_move_to_char<W: Write>(
         &mut self,
         key: Key,
         movement: CharMovement,
-        ed: &mut Editor<'a, W>,
+        ed: &mut Editor<'_, W>,
     ) -> io::Result<()> {
         use self::CharMovement::*;
         use self::MoveType::*;
@@ -974,8 +933,7 @@ impl Vi {
             (_, ReverseRepeat, Some((c, RightAt))) => (Key::Char(c), LeftAt),
             // repeat with no last_char_movement, invalid
             (_, Repeat, None) | (_, ReverseRepeat, None) => {
-                self.normal_mode_abort(ed);
-                return Ok(());
+                return self.normal_mode_abort(ed);
             }
             // pass valid keys through as is
             (Key::Char(c), _, _) => {
@@ -986,8 +944,7 @@ impl Vi {
             }
             // all other combinations are invalid, abort
             _ => {
-                self.normal_mode_abort(ed);
-                return Ok(());
+                return self.normal_mode_abort(ed);
             }
         };
 
@@ -1035,7 +992,7 @@ impl Vi {
         }
     }
 
-    fn handle_key_g<'a, W: Write>(&mut self, key: Key, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn handle_key_g<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         use self::MoveType::*;
 
         let count = self.move_count();
@@ -1052,10 +1009,7 @@ impl Vi {
             }
 
             // not a supported command
-            _ => {
-                self.normal_mode_abort(ed);
-                Ok(())
-            }
+            _ => self.normal_mode_abort(ed),
         };
 
         self.count = 0;
@@ -1064,17 +1018,13 @@ impl Vi {
 }
 
 impl KeyMap for Vi {
-    fn init<'a, W: Write>(&mut self, mut ed: &mut Editor<'a, W>) {
+    fn init<W: Write>(&mut self, ed: &mut Editor<'_, W>) {
         // since we start in insert mode, we need to start an undo group
         ed.current_buffer_mut().start_undo_group();
-        self.set_editor_mode(&mut ed);
+        let _ = self.set_editor_mode(ed);
     }
 
-    fn handle_key_core<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_core<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match self.mode() {
             Mode::Normal => self.handle_key_normal(key, ed),
             Mode::Insert => self.handle_key_insert(key, ed),
@@ -2515,7 +2465,7 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -2534,9 +2484,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2555,9 +2505,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2578,7 +2528,7 @@ mod tests {
         ed.move_cursor_to(start_pos).unwrap();
         assert_eq!(ed.cursor(), 8);
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), 17);
     }
 
@@ -2597,9 +2547,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word(&mut ed, 1).unwrap();
+        move_to_end_of_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2616,7 +2566,7 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -2635,9 +2585,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2653,7 +2603,7 @@ mod tests {
         let end_pos = ed.cursor();
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -2670,7 +2620,7 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -2689,9 +2639,9 @@ mod tests {
         ed.insert_str_after_cursor("e words").unwrap();
         ed.move_cursor_to(start_pos).unwrap();
 
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos1);
-        super::move_to_end_of_word_ws(&mut ed, 1).unwrap();
+        move_to_end_of_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), end_pos2);
     }
 
@@ -2708,15 +2658,15 @@ mod tests {
         ed.insert_str_after_cursor("some words").unwrap();
         ed.move_cursor_to_start_of_line().unwrap();
 
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
     }
 
@@ -2732,15 +2682,15 @@ mod tests {
         let pos2 = ed.cursor();
         ed.move_cursor_to_start_of_line().unwrap();
 
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
     }
 
@@ -2756,13 +2706,13 @@ mod tests {
         let pos2 = ed.cursor();
         ed.move_cursor_to_start_of_line().unwrap();
 
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
     }
 
@@ -2780,15 +2730,15 @@ mod tests {
         let pos3 = ed.cursor();
         ed.move_cursor_to_start_of_line().unwrap();
 
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos3);
     }
 
@@ -2812,45 +2762,45 @@ mod tests {
         // make sure move_word() and move_word_back() are reflections of eachother
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos3);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos4);
-        super::move_word(&mut ed, 1).unwrap();
+        move_word(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos5);
 
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos4);
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos3);
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_back(&mut ed, 1).unwrap();
+        move_word_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), 0);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos4);
-        super::move_word_ws(&mut ed, 1).unwrap();
+        move_word_ws(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos5);
 
-        super::move_word_ws_back(&mut ed, 1).unwrap();
+        move_word_ws_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos4);
-        super::move_word_ws_back(&mut ed, 1).unwrap();
+        move_word_ws_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word_ws_back(&mut ed, 1).unwrap();
+        move_word_ws_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws_back(&mut ed, 1).unwrap();
+        move_word_ws_back(&mut ed, 1).unwrap();
         assert_eq!(ed.cursor(), 0);
     }
 
@@ -2871,25 +2821,25 @@ mod tests {
 
         // make sure move_word() and move_word_back() are reflections of eachother
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word(&mut ed, 3).unwrap();
+        move_word(&mut ed, 3).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word(&mut ed, 2).unwrap();
+        move_word(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos3);
 
-        super::move_word_back(&mut ed, 2).unwrap();
+        move_word_back(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos2);
-        super::move_word_back(&mut ed, 3).unwrap();
+        move_word_back(&mut ed, 3).unwrap();
         assert_eq!(ed.cursor(), 0);
 
         ed.move_cursor_to_start_of_line().unwrap();
-        super::move_word_ws(&mut ed, 2).unwrap();
+        move_word_ws(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws(&mut ed, 2).unwrap();
+        move_word_ws(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos3);
 
-        super::move_word_ws_back(&mut ed, 2).unwrap();
+        move_word_ws_back(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), pos1);
-        super::move_word_ws_back(&mut ed, 2).unwrap();
+        move_word_ws_back(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), 0);
     }
 
@@ -2907,7 +2857,7 @@ mod tests {
         ed.insert_str_after_cursor("s and some").unwrap();
 
         ed.move_cursor_to(start_pos).unwrap();
-        super::move_to_end_of_word_ws(&mut ed, 2).unwrap();
+        move_to_end_of_word_ws(&mut ed, 2).unwrap();
         assert_eq!(ed.cursor(), end_pos);
     }
 
@@ -3592,7 +3542,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcdefg").unwrap();
-        assert_eq!(super::find_char(ed.current_buffer(), 0, 'd', 1), Some(3));
+        assert_eq!(find_char(ed.current_buffer(), 0, 'd', 1), Some(3));
     }
 
     #[test]
@@ -3602,7 +3552,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcabc").unwrap();
-        assert_eq!(super::find_char(ed.current_buffer(), 1, 'a', 1), Some(3));
+        assert_eq!(find_char(ed.current_buffer(), 1, 'a', 1), Some(3));
     }
 
     #[test]
@@ -3612,7 +3562,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcabc").unwrap();
-        assert_eq!(super::find_char(ed.current_buffer(), 0, 'a', 2), Some(3));
+        assert_eq!(find_char(ed.current_buffer(), 0, 'a', 2), Some(3));
     }
 
     #[test]
@@ -3622,7 +3572,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcdefg").unwrap();
-        assert_eq!(super::find_char(ed.current_buffer(), 0, 'z', 1), None);
+        assert_eq!(find_char(ed.current_buffer(), 0, 'z', 1), None);
     }
 
     #[test]
@@ -3632,10 +3582,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcdefg").unwrap();
-        assert_eq!(
-            super::find_char_rev(ed.current_buffer(), 6, 'd', 1),
-            Some(3)
-        );
+        assert_eq!(find_char_rev(ed.current_buffer(), 6, 'd', 1), Some(3));
     }
 
     #[test]
@@ -3645,10 +3592,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcabc").unwrap();
-        assert_eq!(
-            super::find_char_rev(ed.current_buffer(), 5, 'c', 1),
-            Some(2)
-        );
+        assert_eq!(find_char_rev(ed.current_buffer(), 5, 'c', 1), Some(2));
     }
 
     #[test]
@@ -3658,10 +3602,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcabc").unwrap();
-        assert_eq!(
-            super::find_char_rev(ed.current_buffer(), 6, 'c', 2),
-            Some(2)
-        );
+        assert_eq!(find_char_rev(ed.current_buffer(), 6, 'c', 2), Some(2));
     }
 
     #[test]
@@ -3671,7 +3612,7 @@ mod tests {
         let out = Vec::new();
         let mut ed = Editor::new(out, Prompt::from("prompt"), None, &mut context).unwrap();
         ed.insert_str_after_cursor("abcdefg").unwrap();
-        assert_eq!(super::find_char_rev(ed.current_buffer(), 6, 'z', 1), None);
+        assert_eq!(find_char_rev(ed.current_buffer(), 6, 'z', 1), None);
     }
 
     #[test]

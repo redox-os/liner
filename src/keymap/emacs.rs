@@ -22,7 +22,7 @@ impl Emacs {
         Self::default()
     }
 
-    fn handle_ctrl_key<'a, W: Write>(&mut self, c: char, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn handle_ctrl_key<W: Write>(&mut self, c: char, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match c {
             'l' => ed.clear(),
             'a' => ed.move_cursor_to_start_of_line(),
@@ -43,7 +43,7 @@ impl Emacs {
         }
     }
 
-    fn handle_alt_key<'a, W: Write>(&mut self, c: char, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn handle_alt_key<W: Write>(&mut self, c: char, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match c {
             '<' => ed.move_to_start_of_history(),
             '>' => ed.move_to_end_of_history(),
@@ -59,7 +59,7 @@ impl Emacs {
         }
     }
 
-    fn handle_last_arg_fetch<'a, W: Write>(&mut self, ed: &mut Editor<'a, W>) -> io::Result<()> {
+    fn handle_last_arg_fetch<W: Write>(&mut self, ed: &mut Editor<'_, W>) -> io::Result<()> {
         // Empty history means no last arg to fetch.
         if ed.context().history.is_empty() {
             return Ok(());
@@ -96,11 +96,7 @@ impl Emacs {
 }
 
 impl KeyMap for Emacs {
-    fn handle_key_core<'a, W: Write>(
-        &mut self,
-        key: Key,
-        ed: &mut Editor<'a, W>,
-    ) -> io::Result<()> {
+    fn handle_key_core<W: Write>(&mut self, key: Key, ed: &mut Editor<'_, W>) -> io::Result<()> {
         match key {
             Key::Alt('.') => {}
             _ => self.last_arg_fetch_index = None,

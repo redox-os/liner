@@ -90,7 +90,7 @@ pub fn handle_prompt(full_prompt: &str) -> &str {
 
 pub fn terminal_width() -> io::Result<usize> {
     if cfg!(test) {
-        Ok(80 as usize)
+        Ok(80)
     } else {
         let (mut size_col, _) = ::termion::terminal_size()?;
         if size_col == 0 {
