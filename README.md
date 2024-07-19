@@ -24,7 +24,7 @@ In `Cargo.toml`:
 
 ```toml
 [dependencies]
-redox_liner = "0.5.2"
+redox_liner = "0.5.3"
 ...
 ```
 
